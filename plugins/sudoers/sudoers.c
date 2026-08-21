@@ -628,6 +628,88 @@ done:
     debug_return_int(ret);
 }
 
+/*
+ * Canonicalize sudoedit file names if necessary before policy match.
+ * This helps avoid issues with wildcard and regex matching.
+ * We don't currently support -D or CWD for sudoedit so this uses
+ * the user's current working directory.
+ */
+static bool
+canonicalize_edit_args(int argc, char *argv[])
+{
+    int i;
+    debug_decl(canonicalize_edit_args, SUDOERS_DEBUG_PLUGIN);
+
+    for (i = 1; i < argc; i++) {
+	char *file = argv[i];
+
+	/*
+	 * Canonicalize file names containing "..".
+	 * We don't canonicalize unconditionally since it could
+	 * affect sudoers path matching.
+	 */
+	if (sudo_contains_dot_dot(file)) {
+	    char *cp, dir[PATH_MAX], resbuf[PATH_MAX];
+	    const char *base, *resolved;
+
+	    /*
+	     * Only canonicalize the parent dir, we may be creating a new file.
+	     */
+	    base = sudo_basename(file);
+	    if (base == file)
+		continue;
+	    if (strlcpy(dir, file, sizeof(dir)) >= sizeof(dir)) {
+		errno = ENAMETOOLONG;
+		sudo_warn("%s", file);
+		goto bad;
+	    }
+	    dir[base - file - 1] = '\0';
+
+	    /* Need to be runas user for realpath(). */
+	    if (!set_perms(&sudoers_ctx, PERM_RUNAS))
+		goto bad;
+
+	    /* Older realpath() doesn't support passing a NULL buffer. */
+	    resolved = realpath(dir, resbuf);
+
+	    if (!restore_perms())
+		goto bad;
+
+	    if (resolved != NULL) {
+		if (asprintf(&cp, "%s/%s", resolved, base) == -1)
+		    goto oom;
+		file = cp;
+	    }
+	} else {
+	    /* Fully-qualify file to be edited if needed. */
+	    if (file[0] != '/') {
+		char *cp;
+
+		if (sudoers_ctx.user.cwd == NULL) {
+		    sudo_warnx("%s",
+			U_("unable to get current working directory"));
+		    goto bad;
+		}
+		if (asprintf(&cp, "%s/%s", sudoers_ctx.user.cwd, argv[i]) == -1)
+		    goto oom;
+		file = cp;
+	    }
+	    /* Remove consecutive '/' and "/./" path elements. */
+	    rationalize_path(file);
+	}
+	if (file != argv[i]) {
+	    sudoers_gc_add(GC_PTR, file);
+	    argv[i] = file;
+	}
+    }
+    debug_return_bool(true);
+
+oom:
+    sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
+bad:
+    debug_return_bool(false);
+}
+
 static bool need_reinit;
 
 /*
@@ -684,50 +766,22 @@ sudoers_check_cmnd(int argc, char * const argv[], char *env_add[],
 	free(sudoers_ctx.runas.argv);
     }
     sudoers_ctx.runas.argv = reallocarray(NULL, (size_t)argc + 2, sizeof(char *));
-    if (sudoers_ctx.runas.argv == NULL) {
-	sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
-	goto error;
-    }
+    if (sudoers_ctx.runas.argv == NULL)
+	goto oom;
     sudoers_gc_add(GC_PTR, sudoers_ctx.runas.argv);
     memcpy(sudoers_ctx.runas.argv, argv, (size_t)argc * sizeof(char *));
     sudoers_ctx.runas.argc = argc;
     sudoers_ctx.runas.argv[sudoers_ctx.runas.argc] = NULL;
     if (ISSET(sudoers_ctx.mode, MODE_LOGIN_SHELL) && sudoers_ctx.runas.pw != NULL) {
 	sudoers_ctx.runas.argv[0] = strdup(sudoers_ctx.runas.pw->pw_shell);
-	if (sudoers_ctx.runas.argv[0] == NULL) {
-	    sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
-	    goto error;
-	}
+	if (sudoers_ctx.runas.argv[0] == NULL)
+	    goto oom;
 	sudoers_gc_add(GC_PTR, sudoers_ctx.runas.argv[0]);
     }
     if (ISSET(sudoers_ctx.mode, MODE_EDIT)) {
-	int i;
-
-	/*
-	 * Fully-qualify sudoedit file names if necessary.
-	 * We don't currently support -D or CWD for sudoedit
-	 * so this uses the user's current working directory.
-	 */
-	for (i = 1; i < sudoers_ctx.runas.argc; i++) {
-	    if (*sudoers_ctx.runas.argv[i] != '/') {
-		char *cp;
-
-		if (sudoers_ctx.user.cwd == NULL) {
-		    sudo_warnx("%s",
-			U_("unable to get current working directory"));
-		    goto error;
-		}
-		if (asprintf(&cp, "%s/%s", sudoers_ctx.user.cwd,
-			sudoers_ctx.runas.argv[i]) == -1) {
-		    sudo_warnx(U_("%s: %s"), __func__,
-			U_("unable to allocate memory"));
-		    goto error;
-		}
-		sudoers_gc_add(GC_PTR, cp);
-		sudoers_ctx.runas.argv[i] = cp;
-	    }
-	    /* Remove consecutive '/' and "/./" path elements. */
-	    rationalize_path(sudoers_ctx.runas.argv[i]);
+	if (!canonicalize_edit_args(sudoers_ctx.runas.argc,
+		sudoers_ctx.runas.argv)) {
+	    goto error;
 	}
     }
 
@@ -869,10 +923,8 @@ sudoers_check_cmnd(int argc, char * const argv[], char *env_add[],
     /* Save the initial command and argv so we have it for exit logging. */
     if (sudoers_ctx.runas.cmnd_saved == NULL) {
 	sudoers_ctx.runas.cmnd_saved = strdup(sudoers_ctx.runas.cmnd);
-	if (sudoers_ctx.runas.cmnd_saved == NULL) {
-	    sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
-	    goto error;
-	}
+	if (sudoers_ctx.runas.cmnd_saved == NULL)
+	    goto oom;
 	sudoers_ctx.runas.argv_saved = sudoers_ctx.runas.argv;
     }
 
@@ -882,6 +934,9 @@ sudoers_check_cmnd(int argc, char * const argv[], char *env_add[],
 bad:
     ret = false;
     goto done;
+
+oom:
+    sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
 
 error:
     ret = -1;
