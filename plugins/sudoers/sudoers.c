@@ -726,6 +726,8 @@ sudoers_check_cmnd(int argc, char * const argv[], char *env_add[],
 		sudoers_gc_add(GC_PTR, cp);
 		sudoers_ctx.runas.argv[i] = cp;
 	    }
+	    /* Remove consecutive '/' and "/./" path elements. */
+	    rationalize_path(sudoers_ctx.runas.argv[i]);
 	}
     }
 

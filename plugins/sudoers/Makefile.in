@@ -260,10 +260,10 @@ CHECK_SERIALIZE_LIST_OBJS = check_serialize_list.lo serialize_list.lo \
 			    sudoers_debug.lo
 
 FUZZ_POLICY_OBJS = editor.lo env.lo env_pattern.lo fuzz_policy.o \
-                   fuzz_stubs.o gc.lo locale.lo \
-                   policy.lo sethost.lo serialize_list.lo \
-                   strlcpy_unesc.lo strvec_join.lo sudoers.lo \
-                   sudoers_cb.lo sudoers_ctx_free.lo sudoers_hooks.lo
+		   fuzz_stubs.o gc.lo locale.lo policy.lo rationalize.lo \
+		   sethost.lo serialize_list.lo strlcpy_unesc.lo \
+		   strvec_join.lo sudoers.lo sudoers_cb.lo \
+		   sudoers_ctx_free.lo sudoers_hooks.lo
 
 FUZZ_POLICY_CORPUS = $(srcdir)/regress/corpus/seed/policy/policy.*
 
