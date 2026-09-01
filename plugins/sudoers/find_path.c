@@ -46,7 +46,7 @@ cmnd_allowed(char *cmnd, size_t cmnd_size, const char *runchroot,
     debug_decl(cmnd_allowed, SUDOERS_DEBUG_UTIL);
 
     /* First, collapse extra "/" and "./" components. */
-    rationalize_path(cmnd);
+    rationalize_path(cmnd, false);
 
     if (!sudo_goodpath(cmnd, runchroot, cmnd_sbp))
 	debug_return_bool(false);

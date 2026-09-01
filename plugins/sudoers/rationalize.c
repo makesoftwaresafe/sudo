@@ -24,9 +24,10 @@
 
 /*
  * Rationalize a path by removing consecutive '/' and "/./" path elements.
+ * Also removes "/../" elements if dotdot is true.
  */
 char *
-rationalize_path(char *path)
+rationalize_path(char *path, bool dotdot)
 {
     char *cp, *ep, *path_end;
     debug_decl(rationalize_path, SUDOERS_DEBUG_UTIL);
@@ -51,6 +52,31 @@ rationalize_path(char *path)
 
 		/* The size argument includes the terminating NUL byte. */
 		memmove(cp, ep, (size_t)(path_end - ep) + 1);
+		continue;
+	    }
+
+	    /* Remove "/../" in path or "/.." at path_end. */
+	    if (dotdot && cp[1] == '.' && cp[2] == '.' &&
+		    (cp[3] == '/' || cp[3] == '\0')) {
+
+		/* Skip ep past "/../" or "/.." */
+		ep = cp + 3 + (cp[3] == '/');
+
+		/* Set cp to the previous '/' if there is one. */
+		if (cp != path) {
+		    char *saved_cp = cp;
+		    ep = cp + 3 + (cp[3] == '/');
+		    do {
+			cp--;
+		    } while (cp > path && *cp != '/');
+		    if (*cp != '/') {
+			/* No previous '/', path doesn't start with '/'? */
+			cp = saved_cp;
+		    }
+		}
+
+		/* The size argument includes the terminating NUL byte. */
+		memmove(cp + 1, ep, (size_t)(path_end - ep) + 1);
 		continue;
 	    }
 	}

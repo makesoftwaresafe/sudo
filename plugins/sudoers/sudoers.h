@@ -321,7 +321,7 @@ int find_path(const char *infile, char **outfile, struct stat *sbp,
     char * const *allowlist);
 
 /* rationalize.c */
-char *rationalize_path(char *cmnd);
+char *rationalize_path(char *cmnd, bool dotdot);
 
 /* resolve_cmnd.c */
 int resolve_cmnd(struct sudoers_context *ctx, const char *infile,

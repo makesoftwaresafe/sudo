@@ -44,6 +44,16 @@ static struct test_data rationalize_test_data[] = {
     { "/usr/bin/.//", "/usr/bin/" },		/* 9 */
     { "/usr/bin/.", "/usr/bin" },		/* 10 */
     { "/usr/bin//.", "/usr/bin" },		/* 11 */
+    { "/usr//..", "/" },			/* 12 */
+    { "/../", "/" },				/* 13 */
+    { "/..", "/" },				/* 14 */
+    { "/../..", "/" },				/* 15 */
+    { "/../etc", "/etc" },			/* 16 */
+    { "/.../etc", "/.../etc" },			/* 17 */
+    { "./../etc", "./etc" },			/* 18 */
+    { "/etc/../usr/lib", "/usr/lib" },		/* 19 */
+    { "/etc/../usr/..", "/" },			/* 20 */
+    { "/usr/lib/../../etc", "/etc" },		/* 21 */
     { NULL }
 };
 
@@ -65,7 +75,7 @@ test_rationalize_path(int *ntests_out, int *errors_out)
 	    errors++;
 	    continue;
 	}
-	if (strcmp(td->result, rationalize_path(buf)) != 0) {
+	if (strcmp(td->result, rationalize_path(buf, true)) != 0) {
 	    sudo_warnx("%d: \"%s\": got \"%s\", expected \"%s\"",
 		ntests, td->input, buf, td->result);
 	    errors++;

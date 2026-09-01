@@ -694,13 +694,14 @@ canonicalize_edit_args(int argc, char *argv[])
 		    goto oom;
 		file = cp;
 	    }
-	    /* Remove consecutive '/' and "/./" path elements. */
-	    rationalize_path(file);
 	}
 	if (file != argv[i]) {
 	    sudoers_gc_add(GC_PTR, file);
 	    argv[i] = file;
 	}
+
+	/* Remove consecutive '/' and "/./" and "/../" path elements. */
+	rationalize_path(file, true);
     }
     debug_return_bool(true);
 
