@@ -26,7 +26,7 @@
 .nr BA @BAMAN@
 .nr LC @LCMAN@
 .nr PS @PSMAN@
-.TH "SUDOERS" "@mansectform@" "May 23, 2026" "Sudo @PACKAGE_VERSION@" "File Formats Manual"
+.TH "SUDOERS" "@mansectform@" "August 31, 2026" "Sudo @PACKAGE_VERSION@" "File Formats Manual"
 .nh
 .if n .ad l
 .SH "NAME"
@@ -2400,6 +2400,36 @@ files only.
 bob    ALL = sudoedit ^/etc/(motd|issue|hosts)$
 .RE
 .fi
+.PP
+\fBRegular expressions in sudoedit rules should be used with care.\fR
+.br
+Unlike wildcards, a forward slash
+(\(oq/\(cq)
+in a regular expression is not treated specially and will match as
+a normal character.
+The arguments to
+\fBsudoedit\fR
+are concatenated together, separated by a space character, and are
+matched as a single string, even when the user specifies multiple
+files to edit.
+As a result, a pattern that matches any character will also match
+white space, potentially allowing a user to edit any file on the system.
+In general, regular expressions that match any character are unsafe in a
+\fBsudoedit\fR
+rule and should be avoided.
+For example, the following rule is overly broad and would allow user bob
+to edit any file as long as the arguments to
+\fBsudoers\fR
+sudoedit
+begin with a file located in
+\fI/etc\fR.
+.nf
+.sp
+.RS 4n
+bob    ALL = sudoedit ^/etc/.*$
+.RE
+.fi
+.sp
 .PP
 Regular expressions may also be used to match the command itself.
 In this example, a regular expression is used to allow user
