@@ -505,6 +505,8 @@ getsize_cb(int fd, int what, void *v)
 	    if (gc->nums[gc->nums_depth] > INT_MAX / 10)
 		goto done;
 	    gc->nums[gc->nums_depth] *= 10;
+	    if (gc->nums[gc->nums_depth] > INT_MAX - (ch - '0'))
+		goto done;
 	    gc->nums[gc->nums_depth] += (ch - '0');
 	    SET(gc->state, READCHAR);
 	    break;
