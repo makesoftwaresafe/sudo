@@ -377,6 +377,7 @@ host_matches(const struct sudoers_parse_tree *parse_tree,
 {
     struct alias *a;
     int ret = UNSPEC;
+    const char *user = NULL;
     debug_decl(host_matches, SUDOERS_DEBUG_MATCH);
 
     switch (m->type) {
@@ -384,9 +385,12 @@ host_matches(const struct sudoers_parse_tree *parse_tree,
 	    ret = m->negated ? DENY : ALLOW;
 	    break;
 	case NETGROUP:
+	    if (def_netgroup_tuple && pw != NULL)
+		user = pw->pw_name;
 	    if (netgr_matches(parse_tree->nss, m->name, lhost, shost,
-		def_netgroup_tuple ? pw->pw_name : NULL) == ALLOW)
+		    user) == ALLOW) {
 		ret = m->negated ? DENY : ALLOW;
+	    }
 	    break;
 	case NTWKADDR:
 	    if (addr_matches(m->name) == ALLOW)
