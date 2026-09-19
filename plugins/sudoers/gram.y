@@ -615,7 +615,7 @@ chrootspec	:	CHROOT '=' WORD {
 				sudoerserror(N_("\"CHROOT\" is deprecated"));
 				YYERROR;
 			    } else if (parser_conf.verbose > 0) {
-				parser_warnx(parsed_policy.ctx, sudoers, this_lineno, sudolinebuf.toke_start + 1, false, false, N_("\"CHROOT\" is deprecated"));
+				parser_warnx(parsed_policy.ctx, sudoers, this_lineno, (int)(sudolinebuf.toke_start + 1), false, false, N_("\"CHROOT\" is deprecated"));
 			    }
 			    $$ = $3;
 			}

@@ -91,7 +91,7 @@ main(int argc, char *argv[])
     }
 
     /* Verify invalid value is detected. */
-    value.type = -1;
+    value.type = (enum json_value_type)-1;
     value.u.string = NULL;
     ntests++;
     if (sudo_json_add_value(&jsonc, "bogus1", &value)) {

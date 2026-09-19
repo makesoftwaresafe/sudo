@@ -360,7 +360,7 @@ set_time_zone(void)
 int
 os_init_common(int argc, char *argv[], char *envp[])
 {
-    int envc;
+    unsigned int envc;
 #ifdef STATIC_SUDOERS_PLUGIN
     preload_static_symbols();
 #endif

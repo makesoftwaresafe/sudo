@@ -281,7 +281,7 @@ static char **
 user_mailer_env(const char *user)
 {
     char **envp;
-    int i, envc = 4;
+    unsigned int i, envc = 4;
     debug_decl(user_mailer_env, SUDO_DEBUG_UTIL);
 
 #ifdef _AIX

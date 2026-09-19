@@ -120,7 +120,7 @@ sudo_uuid_from_string_v1(const char *str, unsigned char uuid[restrict static 16]
 	    ch = sudo_hexchar(str + i);
 	    if (ch == -1)
 		return -1;
-	    uuid[j++] = ch;
+	    uuid[j++] = ch & 0xff;
 	    i += 2;
 	}
     }

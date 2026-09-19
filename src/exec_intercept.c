@@ -126,8 +126,9 @@ intercept_setup(int fd, struct sudo_event_base *evbase,
 	 * Not using ptrace(2), use LD_PRELOAD (or its equivalent).  If
 	 * we've already seen an InterceptHello, expect a policy check first.
 	 */
-	const int new_state = sudo_token_isset(intercept_token) ?
-	    RECV_SECRET : RECV_HELLO_INITIAL;
+	const enum intercept_state new_state =
+	    sudo_token_isset(intercept_token) ?  RECV_SECRET :
+	    RECV_HELLO_INITIAL;
 	if (!enable_read_event(fd, new_state, intercept_cb, closure))
 	    goto bad;
     }

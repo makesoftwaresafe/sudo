@@ -98,7 +98,7 @@ main(int argc, char *argv[])
 	/* Check that we can format a dev_t as a string and parse it. */
 	ntests++;
 	(void)snprintf(numbuf, sizeof(numbuf), "%lld", (long long)ttydev);
-	newdev = sudo_strtonum(numbuf, LLONG_MIN, LLONG_MAX, &errstr);
+	newdev = (dev_t)sudo_strtonum(numbuf, LLONG_MIN, LLONG_MAX, &errstr);
 	if (errstr != NULL) {
 	    printf("%s: FAIL unable to parse device number %s: %s",
 		getprogname(), numbuf, errstr);
