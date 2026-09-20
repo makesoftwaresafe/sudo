@@ -788,7 +788,7 @@ iolog_copy(struct iolog_file *src, struct iolog_file *dst, off_t remainder,
     while (remainder > 0) {
 	const size_t toread = MIN((size_t)remainder, sizeof(buf));
 	nread = iolog_read(src, buf, toread, errstr);
-	if (nread == -1)
+	if (nread <= 0)
 	    debug_return_bool(false);
 	remainder -= nread;
 
