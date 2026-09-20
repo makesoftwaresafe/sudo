@@ -232,6 +232,11 @@ iolog_parse_timing(const char *line, struct timing_closure *timing)
 	/* Note: assumes SIZE_MAX == ULONG_MAX */
 	if (errno == ERANGE && ulval == ULONG_MAX)
 	    goto bad;
+	/* nbytes is also used as off_t, SIZE_MAX may be > OFF_T_MAX */
+	if (ulval > OFF_T_MAX) {
+	    errno = ERANGE;
+	    goto bad;
+	}
 	timing->u.nbytes = (size_t)ulval;
 	break;
     }
