@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: ISC
  *
- * Copyright (c) 2012 Todd C. Miller <Todd.Miller@sudo.ws>
+ * Copyright (c) 2012, 2026 Todd C. Miller <Todd.Miller@sudo.ws>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,10 @@
 
 #include <config.h>
 
+#include <sys/stat.h>
 #include <sudo.h>
+
+mode_t _permit_setugid = S_ISUID;
 
 int
 os_init(int argc, char *argv[], char *envp[])
