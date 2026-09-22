@@ -38,14 +38,6 @@
 #undef GRMEM_MAX
 #define GRMEM_MAX 200
 
-#ifndef UID_MAX
-# define UID_MAX 0xffffffffU
-#endif
-
-#ifndef GID_MAX
-# define GID_MAX UID_MAX
-#endif
-
 static FILE *pwf;
 static const char *pwfile = "/etc/passwd";
 static int pw_stayopen;
