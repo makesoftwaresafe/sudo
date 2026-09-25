@@ -858,7 +858,7 @@ iolog_rewrite(const struct timespec *target, struct connection_closure *closure)
 		    evlog->iolog_path, iolog_fd_to_name(timing.event));
 		goto done;
 	    }
-	    if (iolog_file_sizes[timing.event] > OFF_T_MAX - timing.u.nbytes) {
+	    if (iolog_file_sizes[timing.event] > OFF_T_MAX - (off_t)timing.u.nbytes) {
 		errno = EOVERFLOW;
 		sudo_warn("%s", evlog->iolog_path);
 		goto done;
